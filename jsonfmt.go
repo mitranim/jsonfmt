@@ -154,7 +154,7 @@ func (self *fmter) dict() {
 
 func (self *fmter) dictSingle() {
 	prev := self.snap()
-	defer self.rollbackMulti(prev)
+	defer self.maybeRollback(prev)
 
 	assert(self.isNextByte('{'))
 	self.byte()
@@ -244,7 +244,7 @@ func (self *fmter) list() {
 
 func (self *fmter) listSingle() {
 	prev := self.snap()
-	defer self.rollbackMulti(prev)
+	defer self.maybeRollback(prev)
 
 	assert(self.isNextByte('['))
 	self.byte()
@@ -537,7 +537,7 @@ func (self *fmter) snap() *fmter {
 
 var rollback = new(struct{})
 
-func (self *fmter) rollbackMulti(prev *fmter) {
+func (self *fmter) maybeRollback(prev *fmter) {
 	snapshot := self.snapshot
 	self.snapshot = prev
 
