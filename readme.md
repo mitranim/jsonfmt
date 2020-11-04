@@ -62,7 +62,7 @@ For CLI usage, run `jsonfmt -h`.
 
 ```jsonc
 {// Line comment
-"one": "two", /* Block comment */ "three": 40,}
+"one": "two", /* Block comment */ "three": 40}
 ```
 
 Output:
@@ -81,7 +81,7 @@ Output:
 ```jsonc
 {
   "one": {"two": ["three"], "four": ["five"]},
-  "six": {"seven": ["eight"], "nine": ["ten"], "eleven": ["twelve"], "thirteen": ["fourteen"]},
+  "six": {"seven": ["eight"], "nine": ["ten"], "eleven": ["twelve"], "thirteen": ["fourteen"]}
 }
 ```
 

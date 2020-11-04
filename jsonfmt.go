@@ -1,3 +1,22 @@
+/*
+Flexible JSON formatter. Features:
+
+	* Preserves order.
+	* Fits dicts and lists on a single line until a certain width (configurable).
+	* Supports comments (configurable).
+	* Supports trailing commas (configurable).
+	* Fixes missing or broken punctuation.
+	* Tiny Go library + optional tiny CLI.
+
+Current limitations:
+
+	* Always permissive. Unrecognized non-whitespace is treated as arbitrary
+	  content on par with strings, numbers, etc.
+	* Slower than `json.Indent` from the Go standard library.
+	* Input must be UTF-8.
+
+Source and readme: https://github.com/mitranim/jsonfmt.
+*/
 package jsonfmt
 
 import (
@@ -330,7 +349,6 @@ func (self *fmter) commentSingle() {
 		if self.isNextByte('\n') || self.isNextByte('\r') {
 			self.skipByte()
 			self.writeNewline()
-			// self.writeMaybeNewline()
 			return
 		}
 

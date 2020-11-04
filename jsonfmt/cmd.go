@@ -1,3 +1,16 @@
+/*
+Command line tool for jsonfmt.
+
+Installation:
+
+	go get -u github.com/mitranim/jsonfmt
+
+Usage:
+
+	jsonfmt -h
+
+Source and readme: https://github.com/mitranim/jsonfmt.
+*/
 package main
 
 import (
