@@ -1,0 +1,34 @@
+{
+  "global": {
+    "check_for_updates_on_startup": true,
+    "show_in_menu_bar": false,
+    "show_profile_name_in_menu_bar": false,
+  },
+  "profiles": [
+    {
+      "complex_modifications": {
+        "parameters": {
+          "basic.simultaneous_threshold_milliseconds": 50,
+          "basic.to_delayed_action_delay_milliseconds": 500,
+          "basic.to_if_alone_timeout_milliseconds": 1000,
+          "basic.to_if_held_down_threshold_milliseconds": 500,
+        },
+        "rules": [
+          {
+            "description": "Custom Tweaks",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "f19",
+                  "modifiers": {"mandatory": ["left_command"]},
+                },
+                "to": [{"key_code": "vk_none"}],
+                "type": "basic",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+}

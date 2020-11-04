@@ -1,0 +1,10 @@
+/*
+!/.gitignore
+!/*.go
+!/go.mod
+!/go.sum
+!/readme.md
+!/unlicense
+!/jsonfmt
+!/testfiles
+/testfiles/*_fmted.*
