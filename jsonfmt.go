@@ -89,11 +89,22 @@ type fmter struct {
 
 func (self *fmter) top() {
 	for self.more() {
-		if !self.didAny() {
-			self.skipChar()
+		if self.skipped() {
+			continue
 		}
+
+		if self.isNextComment() {
+			assert(self.didAny())
+			continue
+		}
+
+		if self.didAny() {
+			self.writeMaybeNewline()
+			continue
+		}
+
+		self.skipChar()
 	}
-	self.writeMaybeNewline()
 }
 
 func (self *fmter) any() {

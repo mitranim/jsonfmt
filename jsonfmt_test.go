@@ -111,6 +111,17 @@ func TestFmtSingleLineStripComments(t *testing.T) {
 	eqFile(t, src, "out_long_single_stripped.json", output)
 }
 
+func TestFmtJsonLines(t *testing.T) {
+	conf := Default
+	conf.StripComments = true
+
+	const src = "in_lines.json"
+	input := readTestFile(t, src)
+	output := Fmt(input, conf)
+
+	eqFile(t, src, "out_lines.json", output)
+}
+
 func eqFile(tb testing.TB, pathSrc string, pathExpected string, fmtedContent []byte) {
 	expectedContent := readTestFile(tb, pathExpected)
 
