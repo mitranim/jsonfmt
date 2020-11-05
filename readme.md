@@ -31,12 +31,10 @@ var formatted = jsonfmt.Fmt([]byte(`{}`), jsonfmt.Default)
 
 ### CLI
 
-For now, installation is manual. First, install Go: https://golang.org. Then run this:
+First, install Go: https://golang.org. Then run this:
 
 ```sh
-git clone https://github.com/mitranim/jsonfmt
-cd jsonfmt
-go install ./jsonfmt
+go get -u github.com/mitranim/jsonfmt/jsonfmt
 ```
 
 This will compile the executable into `$GOPATH/bin/jsonfmt`. Make sure `$GOPATH/bin` is in your `$PATH` so the shell can discover the `jsonfmt` command. For example, my `~/.profile` contains this:
