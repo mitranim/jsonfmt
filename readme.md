@@ -31,13 +31,15 @@ var formatted = jsonfmt.Fmt([]byte(`{}`), jsonfmt.Default)
 
 ### CLI
 
-Make sure you have Go installed, then run this:
+For now, installation is manual. First, install Go: https://golang.org. Then run this:
 
 ```sh
-go get -u github.com/mitranim/jsonfmt
+git clone https://github.com/mitranim/jsonfmt
+cd jsonfmt
+go install ./jsonfmt
 ```
 
-This will download the source and compile the executable into `$GOPATH/bin/jsonfmt`. Make sure `$GOPATH/bin` is in your `$PATH` so the shell can discover the `jsonfmt` command. For example, my `~/.profile` contains this:
+This will compile the executable into `$GOPATH/bin/jsonfmt`. Make sure `$GOPATH/bin` is in your `$PATH` so the shell can discover the `jsonfmt` command. For example, my `~/.profile` contains this:
 
 ```sh
 export GOPATH=~/go
