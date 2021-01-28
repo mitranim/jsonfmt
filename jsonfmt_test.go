@@ -122,17 +122,35 @@ func TestFmtJsonLines(t *testing.T) {
 	eqFile(t, src, "out_lines.json", output)
 }
 
-func eqFile(tb testing.TB, pathSrc string, pathExpected string, fmtedContent []byte) {
-	expectedContent := readTestFile(tb, pathExpected)
+// This used to hang forever.
+func TestFmtPrimitive(t *testing.T) {
+	input := []byte("0")
+	expected := []byte("0\n")
+	fmted := Fmt(input, Default)
+
+	if bytes.Equal(expected, fmted) {
+		return
+	}
+
+	t.Fatalf(strings.TrimSpace(`
+format mismatch
+input:           %q
+expected output: %q
+actual output:   %q
+`), input, expected, fmted)
+}
+
+func eqFile(t testing.TB, pathSrc string, pathExpected string, fmtedContent []byte) {
+	expectedContent := readTestFile(t, pathExpected)
 
 	if bytes.Equal(expectedContent, fmtedContent) {
 		return
 	}
 
 	pathFmted := appendToName(pathExpected, FMTED_SUFFIX)
-	writeTestFile(tb, pathFmted, fmtedContent)
+	writeTestFile(t, pathFmted, fmtedContent)
 
-	tb.Fatalf(strings.TrimSpace(`
+	t.Fatalf(strings.TrimSpace(`
 format mismatch
 source:          %q
 expected output: %q
@@ -159,20 +177,20 @@ func deleteTestFiles(pattern string) error {
 	return nil
 }
 
-func readTestFile(tb testing.TB, name string) []byte {
+func readTestFile(t testing.TB, name string) []byte {
 	path := testFilePath(name)
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
-		tb.Fatalf("failed to read test file at %q: %+v", path, err)
+		t.Fatalf("failed to read test file at %q: %+v", path, err)
 	}
 	return content
 }
 
-func writeTestFile(tb testing.TB, name string, content []byte) {
+func writeTestFile(t testing.TB, name string, content []byte) {
 	path := testFilePath(name)
 	err := ioutil.WriteFile(path, content, os.ModePerm)
 	if err != nil {
-		tb.Fatalf("failed to write %q: %+v", path, err)
+		t.Fatalf("failed to write %q: %+v", path, err)
 	}
 }
 

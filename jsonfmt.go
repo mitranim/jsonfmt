@@ -389,13 +389,14 @@ func (self *fmter) commentMulti() {
 }
 
 func (self *fmter) atom() {
-	for !self.isNextSpace() && !self.isNextTerminal() {
+	for self.more() && !self.isNextSpace() && !self.isNextTerminal() {
 		self.char()
 	}
 }
 
 func (self *fmter) char() {
 	char, size := utf8.DecodeRuneInString(self.rest())
+	assert(size > 0)
 	self.writeRune(char)
 	self.cursor += size
 }
@@ -528,6 +529,9 @@ func (self *fmter) reset(prev *fmter) {
 	self.buf.Truncate(prev.buf.Len())
 }
 
+// Causes an escape and a minor heap allocation, but this isn't our bottleneck.
+// Ensuring stack allocation in this particular case seems to have no effect on
+// performance.
 func (self *fmter) snap() *fmter {
 	prev := self.snapshot
 	snapshot := *self
@@ -623,8 +627,7 @@ func (self *fmter) isNextTerminal() bool {
 }
 
 func (self *fmter) isNextComment() bool {
-	return self.isNextCommentSingle() ||
-		self.isNextCommentMulti()
+	return self.isNextCommentSingle() || self.isNextCommentMulti()
 }
 
 var (
@@ -704,6 +707,6 @@ func bytesToMutableString(bytes []byte) string {
 
 func assert(ok bool) {
 	if !ok {
-		panic("[jsonfmt] assertion failure, see the stacktrace")
+		panic("[jsonfmt] internal error: failed a condition that should never be failed, see the stacktrace")
 	}
 }
