@@ -34,7 +34,7 @@ var formatted = jsonfmt.Fmt([]byte(`{}`), jsonfmt.Default)
 First, install Go: https://golang.org. Then run this:
 
 ```sh
-go get -u github.com/mitranim/jsonfmt/jsonfmt
+go install github.com/mitranim/jsonfmt/jsonfmt@latest
 ```
 
 This will compile the executable into `$GOPATH/bin/jsonfmt`. Make sure `$GOPATH/bin` is in your `$PATH` so the shell can discover the `jsonfmt` command. For example, my `~/.profile` contains this:
