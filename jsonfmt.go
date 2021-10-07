@@ -113,11 +113,11 @@ func (self *fmter) top() {
 		}
 
 		if self.isNextComment() {
-			assert(self.didAny())
+			assert(self.scannedAny())
 			continue
 		}
 
-		if self.didAny() {
+		if self.scannedAny() {
 			self.writeMaybeNewline()
 			continue
 		}
@@ -142,7 +142,7 @@ func (self *fmter) any() {
 	}
 }
 
-func (self *fmter) didAny() bool {
+func (self *fmter) scannedAny() bool {
 	return self.scanned((*fmter).any)
 }
 
@@ -171,19 +171,19 @@ func (self *fmter) dictSingle() {
 		}
 
 		if self.isNextComment() {
-			assert(self.didAny())
+			assert(self.scannedAny())
 			continue
 		}
 
 		if key {
-			assert(self.didAny())
+			assert(self.scannedAny())
 			self.writeByte(':')
 			self.writeMaybeSeparator()
 			key = false
 			continue
 		}
 
-		assert(self.didAny())
+		assert(self.scannedAny())
 		if self.hasNonCommentsBefore('}') {
 			self.writeByte(',')
 			self.writeMaybeSeparator()
@@ -213,20 +213,20 @@ func (self *fmter) dictMulti() {
 
 		if self.isNextComment() {
 			self.writeMaybeCommentNewlineIndent()
-			assert(self.didAny())
+			assert(self.scannedAny())
 			continue
 		}
 
 		if key {
 			self.writeMaybeNewlineIndent()
-			assert(self.didAny())
+			assert(self.scannedAny())
 			self.writeByte(':')
 			self.writeMaybeSeparator()
 			key = false
 			continue
 		}
 
-		assert(self.didAny())
+		assert(self.scannedAny())
 		if self.hasNonCommentsBefore('}') {
 			self.writeByte(',')
 		} else {
@@ -260,11 +260,11 @@ func (self *fmter) listSingle() {
 		}
 
 		if self.isNextComment() {
-			assert(self.didAny())
+			assert(self.scannedAny())
 			continue
 		}
 
-		assert(self.didAny())
+		assert(self.scannedAny())
 		if self.hasNonCommentsBefore(']') {
 			self.writeByte(',')
 			self.writeMaybeSeparator()
@@ -292,12 +292,12 @@ func (self *fmter) listMulti() {
 
 		if self.isNextComment() {
 			self.writeMaybeCommentNewlineIndent()
-			assert(self.didAny())
+			assert(self.scannedAny())
 			continue
 		}
 
 		self.writeMaybeNewlineIndent()
-		assert(self.didAny())
+		assert(self.scannedAny())
 		if self.hasNonCommentsBefore(']') {
 			self.writeByte(',')
 		} else {
@@ -511,7 +511,7 @@ func (self *fmter) hasNonCommentsBefore(char byte) bool {
 		}
 
 		if self.isNextComment() {
-			assert(self.didAny())
+			assert(self.scannedAny())
 			continue
 		}
 
