@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,121 +11,121 @@ import (
 )
 
 const (
-	DIR_TEST_FILES      = "testfiles"
-	FMTED_SUFFIX        = "_fmted"
-	STD_COMPATIBLE_FILE = "in_long_pure.json"
+	DIR_TESTDATA        = `testdata`
+	FMTED_SUFFIX        = `_fmted`
+	STD_COMPATIBLE_FILE = `inp_long_pure.json`
 )
 
-func BenchmarkStdlibIndent(b *testing.B) {
+func Benchmark_json_Indent(b *testing.B) {
 	content := readTestFile(b, STD_COMPATIBLE_FILE)
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
 		var buf bytes.Buffer
-		must(json.Indent(&buf, content, "", "  "))
+		try(json.Indent(&buf, content, ``, `  `))
 	}
 }
 
-func BenchmarkFmt(b *testing.B) {
+func BenchmarkFormat(b *testing.B) {
 	content := readTestFile(b, STD_COMPATIBLE_FILE)
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = Fmt(content, Default)
+		_ = FormatBytes(Default, content)
 	}
 }
 
 func TestMain(m *testing.M) {
-	must(deleteTestFiles("*" + FMTED_SUFFIX + ".*"))
+	try(deleteTestFiles(`*` + FMTED_SUFFIX + `.*`))
 
 	code := m.Run()
 	if code == 0 {
-		must(deleteTestFiles("*" + FMTED_SUFFIX + ".*"))
+		try(deleteTestFiles(`*` + FMTED_SUFFIX + `.*`))
 	}
 
 	os.Exit(code)
 }
 
 // Sanity check for the test itself.
-func TestStdlibIndent(t *testing.T) {
+func Test_json_Indent(t *testing.T) {
 	const src = STD_COMPATIBLE_FILE
 	content := readTestFile(t, src)
 
 	var buf bytes.Buffer
-	must(json.Indent(&buf, content, "", "  "))
+	try(json.Indent(&buf, content, ``, `  `))
 
-	eqFile(t, src, "out_long_multi.json", buf.Bytes())
+	eqFile(t, src, `out_long_multi.json`, buf.Bytes())
 }
 
-func TestFmtHybrid(t *testing.T) {
+func TestFormat_hybrid(t *testing.T) {
 	conf := Default
 	conf.TrailingComma = true
 
-	const src = "in_long_comments.json"
+	const src = `inp_long_comments.json`
 	input := readTestFile(t, src)
-	output := Fmt(input, conf)
-	eqFile(t, src, "out_long_hybrid_commas_comments.json", output)
+	output := FormatBytes(conf, input)
+	eqFile(t, src, `out_long_hybrid_commas_comments.json`, output)
 }
 
-func TestFmtHybridStripComments(t *testing.T) {
+func TestFormat_hybrid_strip_comments(t *testing.T) {
 	conf := Default
 	conf.TrailingComma = true
 	conf.StripComments = true
 
-	const src = "in_long_comments.json"
+	const src = `inp_long_comments.json`
 	input := readTestFile(t, src)
-	output := Fmt(input, conf)
-	eqFile(t, src, "out_long_hybrid_commas.json", output)
+	output := FormatBytes(conf, input)
+	eqFile(t, src, `out_long_hybrid_commas.json`, output)
 }
 
-func TestFmtInsertPunctuation(t *testing.T) {
+func TestFormat_insert_punctuation(t *testing.T) {
 	conf := Default
 	conf.TrailingComma = true
 
-	const src = "in_short_nopunc.json"
+	const src = `inp_short_nopunc.json`
 	input := readTestFile(t, src)
-	output := Fmt(input, conf)
-	eqFile(t, src, "out_short_punc.json", output)
+	output := FormatBytes(conf, input)
+	eqFile(t, src, `out_short_punc.json`, output)
 }
 
-func TestFmtSingleLineWithComments(t *testing.T) {
+func TestFormat_single_line_with_comments(t *testing.T) {
 	conf := Default
-	conf.Indent = ""
+	conf.Indent = ``
 	conf.StripComments = false
 
-	const src = "in_long_comments.json"
+	const src = `inp_long_comments.json`
 	input := readTestFile(t, src)
-	output := Fmt(input, conf)
-	eqFile(t, src, "out_long_single_comments.json", output)
+	output := FormatBytes(conf, input)
+	eqFile(t, src, `out_long_single_comments.json`, output)
 }
 
-func TestFmtSingleLineStripComments(t *testing.T) {
+func TestFormat_single_line_strip_comments(t *testing.T) {
 	conf := Default
-	conf.Indent = ""
+	conf.Indent = ``
 	conf.StripComments = true
 
-	const src = "in_long_comments.json"
+	const src = `inp_long_comments.json`
 	input := readTestFile(t, src)
-	output := Fmt(input, conf)
-	eqFile(t, src, "out_long_single_stripped.json", output)
+	output := FormatBytes(conf, input)
+	eqFile(t, src, `out_long_single_stripped.json`, output)
 }
 
-func TestFmtJsonLines(t *testing.T) {
+func TestFormat_json_lines(t *testing.T) {
 	conf := Default
 	conf.StripComments = true
 
-	const src = "in_lines.json"
+	const src = `inp_lines.json`
 	input := readTestFile(t, src)
-	output := Fmt(input, conf)
+	output := FormatBytes(conf, input)
 
-	eqFile(t, src, "out_lines.json", output)
+	eqFile(t, src, `out_lines.json`, output)
 }
 
 // This used to hang forever.
-func TestFmtPrimitive(t *testing.T) {
-	input := []byte("0")
+func TestFormat_primitive(t *testing.T) {
+	input := []byte(`0`)
 	expected := []byte("0\n")
-	fmted := Fmt(input, Default)
+	fmted := FormatBytes(Default, input)
 
 	if bytes.Equal(expected, fmted) {
 		return
@@ -164,13 +163,13 @@ actual output:   %q
 func deleteTestFiles(pattern string) error {
 	matches, err := filepath.Glob(testFilePath(pattern))
 	if err != nil {
-		panic(fmt.Errorf("failed to find files by pattern %q: %w", pattern, err))
+		panic(fmt.Errorf(`failed to find files by pattern %q: %w`, pattern, err))
 	}
 
 	for _, path := range matches {
 		err := os.Remove(path)
 		if err != nil {
-			panic(fmt.Errorf("failed to delete %q: %w", path, err))
+			panic(fmt.Errorf(`failed to delete %q: %w`, path, err))
 		}
 	}
 
@@ -179,23 +178,23 @@ func deleteTestFiles(pattern string) error {
 
 func readTestFile(t testing.TB, name string) []byte {
 	path := testFilePath(name)
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
-		t.Fatalf("failed to read test file at %q: %+v", path, err)
+		t.Fatalf(`failed to read test file at %q: %+v`, path, err)
 	}
 	return content
 }
 
 func writeTestFile(t testing.TB, name string, content []byte) {
 	path := testFilePath(name)
-	err := ioutil.WriteFile(path, content, os.ModePerm)
+	err := os.WriteFile(path, content, os.ModePerm)
 	if err != nil {
-		t.Fatalf("failed to write %q: %+v", path, err)
+		t.Fatalf(`failed to write %q: %+v`, path, err)
 	}
 }
 
 func testFilePath(name string) string {
-	return filepath.Join(DIR_TEST_FILES, name)
+	return filepath.Join(DIR_TESTDATA, name)
 }
 
 func appendToName(path string, suffix string) string {
@@ -209,9 +208,16 @@ func splitPath(path string) (string, string, string) {
 	ext := filepath.Ext(file)
 	base := strings.TrimSuffix(file, ext)
 
-	if base == "" && ext != "" {
-		return dir, ext, ""
+	if base == `` && ext != `` {
+		return dir, ext, ``
 	}
 
 	return dir, base, ext
+}
+
+func try(err error) {
+	if err != nil {
+		fmt.Fprintf(os.Stderr, `%+v`, err)
+		os.Exit(1)
+	}
 }

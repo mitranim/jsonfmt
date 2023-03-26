@@ -6,5 +6,5 @@
 !/readme.md
 !/unlicense
 !/jsonfmt
-!/testfiles
-/testfiles/*_fmted.*
+!/testdata
+/testdata/*_fmted.*

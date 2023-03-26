@@ -21,8 +21,6 @@ package jsonfmt
 
 import (
 	"bytes"
-	"fmt"
-	"os"
 	"strings"
 	"unicode/utf8"
 	"unsafe"
@@ -32,27 +30,27 @@ import (
 Default configuration. To override, make a copy:
 
 	conf := jsonfmt.Default
-	conf.CommentLine = "#"
-	content = jsonfmt.Fmt(content, conf)
+	conf.CommentLine = `#`
+	content = jsonfmt.FormatBytes(conf, content)
 
 See `Conf` for details.
 */
 var Default = Conf{
-	Indent:            "  ",
+	Indent:            `  `,
 	Width:             80,
-	CommentLine:       "//",
-	CommentBlockStart: "/*",
-	CommentBlockEnd:   "*/",
+	CommentLine:       `//`,
+	CommentBlockStart: `/*`,
+	CommentBlockEnd:   `*/`,
 	TrailingComma:     false,
 	StripComments:     false,
 }
 
 /*
-Configuration passed to `Fmt`. See the variable `Default`.
+Configuration passed to `Format`. See the variable `Default`.
 
 `Indent` controls multi-line output. When empty, jsonfmt will not emit separator
 spaces or newlines, except at the end of single-line comments. To enforce
-single-line output, use `Indent: ""` and `StripComments: true`.
+single-line output, use `Indent: ``` and `StripComments: true`.
 
 `Width` is the width limit for single-line formatting. If 0, jsonfmt will prefer
 multi-line mode. Note that `Indent` must be set for multi-line.
@@ -69,7 +67,7 @@ surrounded by punctuation.
 multi-line mode. In single-line mode, trailing commas are always omitted.
 
 `StripComments` omits all comments from the output. To enforce single-line mode,
-specify this together with `Indent: ""`. Otherwise, single-line comments are
+specify this together with `Indent: ```. Otherwise, single-line comments are
 always followed by a newline.
 */
 type Conf struct {
@@ -87,11 +85,24 @@ const (
 	newline   = '\n'
 )
 
+// Describes various interchangeable text types.
+type Text interface{ ~string | ~[]byte }
+
 // Formats JSON according to the config. See `Conf`.
-func Fmt(source []byte, conf Conf) []byte {
-	fmter := fmter{source: bytesToMutableString(source), conf: conf}
+func Format[Out, Src Text](conf Conf, src Src) Out {
+	fmter := fmter{source: text[string](src), conf: conf}
 	fmter.top()
-	return fmter.buf.Bytes()
+	return text[Out](fmter.buf.Bytes())
+}
+
+// Formats JSON text according to config, returning a string.
+func FormatString[Src Text](conf Conf, src Src) string {
+	return Format[string](conf, src)
+}
+
+// Formats JSON text according to config, returning bytes.
+func FormatBytes[Src Text](conf Conf, src Src) []byte {
+	return Format[[]byte](conf, src)
 }
 
 type fmter struct {
@@ -330,7 +341,7 @@ func (self *fmter) string() {
 
 func (self *fmter) commentSingle() {
 	prefix := self.nextCommentSingle()
-	assert(prefix != "")
+	assert(prefix != ``)
 
 	if self.conf.StripComments {
 		self.setDiscard(true)
@@ -358,7 +369,7 @@ func (self *fmter) commentSingle() {
 
 func (self *fmter) commentMulti() {
 	prefix, suffix := self.nextCommentMulti()
-	assert(prefix != "" && suffix != "")
+	assert(prefix != `` && suffix != ``)
 
 	if self.conf.StripComments {
 		self.setDiscard(true)
@@ -482,19 +493,19 @@ func (self *fmter) writeMaybeCommentNewlineIndent() {
 
 func (self *fmter) nextCommentSingle() string {
 	prefix := self.conf.CommentLine
-	if prefix != "" && strings.HasPrefix(self.rest(), prefix) {
+	if prefix != `` && strings.HasPrefix(self.rest(), prefix) {
 		return prefix
 	}
-	return ""
+	return ``
 }
 
 func (self *fmter) nextCommentMulti() (string, string) {
 	prefix := self.conf.CommentBlockStart
 	suffix := self.conf.CommentBlockEnd
-	if prefix != "" && suffix != "" && strings.HasPrefix(self.rest(), prefix) {
+	if prefix != `` && suffix != `` && strings.HasPrefix(self.rest(), prefix) {
 		return prefix, suffix
 	}
-	return "", ""
+	return ``, ``
 }
 
 func (self *fmter) hasNonCommentsBefore(char byte) bool {
@@ -577,7 +588,7 @@ func (self *fmter) rest() string {
 	if self.more() {
 		return self.source[self.cursor:]
 	}
-	return ""
+	return ``
 }
 
 func (self *fmter) isNextPrefix(prefix string) bool {
@@ -607,12 +618,12 @@ func (self *fmter) isNextPunctuation() bool {
 }
 
 func (self *fmter) isNextCommentSingle() bool {
-	return self.nextCommentSingle() != ""
+	return self.nextCommentSingle() != ``
 }
 
 func (self *fmter) isNextCommentMulti() bool {
 	prefix, suffix := self.nextCommentMulti()
-	return prefix != "" && suffix != ""
+	return prefix != `` && suffix != ``
 }
 
 func (self *fmter) isNextTerminal() bool {
@@ -691,22 +702,14 @@ func (self *fmter) preferSingle() bool {
 }
 
 func (self *fmter) whitespace() bool {
-	return self.conf.Indent != ""
+	return self.conf.Indent != ``
 }
 
-func must(err error) {
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%+v", err)
-		os.Exit(1)
-	}
-}
-
-func bytesToMutableString(bytes []byte) string {
-	return *(*string)(unsafe.Pointer(&bytes))
-}
+// Allocation-free conversion between two text types.
+func text[Out, Src Text](src Src) Out { return *(*Out)(unsafe.Pointer(&src)) }
 
 func assert(ok bool) {
 	if !ok {
-		panic("[jsonfmt] internal error: failed a condition that should never be failed, see the stacktrace")
+		panic(`[jsonfmt] internal error: failed a condition that should never be failed, see the stacktrace`)
 	}
 }

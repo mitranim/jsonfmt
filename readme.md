@@ -7,7 +7,9 @@ Flexible JSON formatter. Features:
 * Supports comments (configurable).
 * Supports trailing commas (configurable).
 * Fixes missing or broken punctuation.
-* Tiny Go library + optional tiny CLI.
+* Tiny Go library.
+* Optional tiny CLI.
+* No dependencies.
 
 See API documentation at https://godoc.org/github.com/mitranim/jsonfmt.
 
@@ -16,6 +18,8 @@ Current limitations:
 * Always permissive. Unrecognized non-whitespace is treated as arbitrary content on par with strings, numbers, etc.
 * Slower than `json.Indent` from the Go standard library.
 * Input must be UTF-8.
+* Input and output are `[]byte`, without streaming.
+  * Streaming support could be added on demand.
 
 ## Installation
 
@@ -26,7 +30,8 @@ To use this as a library, simply import it:
 ```go
 import "github.com/mitranim/jsonfmt"
 
-var formatted = jsonfmt.Fmt([]byte(`{}`), jsonfmt.Default)
+formatted := jsonfmt.FormatString(`{}`, jsonfmt.Default)
+formatted := jsonfmt.FormatBytes([]byte(`{}`), jsonfmt.Default)
 ```
 
 ### CLI
