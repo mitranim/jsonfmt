@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -137,6 +138,46 @@ input:           %q
 expected output: %q
 actual output:   %q
 `), input, expected, fmted)
+}
+
+func TestUnmarshal(t *testing.T) {
+	type TarGlobal struct {
+		CheckForUpdatesOnStartup bool `json:"check_for_updates_on_startup"`
+		ShowInMenuBar            bool `json:"show_in_menu_bar"`
+		ShowProfileNameInMenuBar bool `json:"show_profile_name_in_menu_bar"`
+	}
+
+	type TarProfile struct {
+		// Fields elided for simplicity.
+	}
+
+	type Tar struct {
+		Global   TarGlobal    `json:"global"`
+		Profiles []TarProfile `json:"profiles"`
+	}
+
+	var tar Tar
+	try(Unmarshal(readTestFile(t, `inp_short_nopunc.json`), &tar))
+
+	eq(t, tar, Tar{
+		Global:   TarGlobal{CheckForUpdatesOnStartup: true},
+		Profiles: []TarProfile{{}},
+	})
+}
+
+func eq(t testing.TB, exp, act interface{}) {
+	if !reflect.DeepEqual(exp, act) {
+		t.Fatalf(`
+expected (detailed):
+	%#[1]v
+actual (detailed):
+	%#[2]v
+expected (simple):
+	%[1]v
+actual (simple):
+	%[2]v
+`, exp, act)
+	}
 }
 
 func eqFile(t testing.TB, pathSrc string, pathExpected string, fmtedContent []byte) {

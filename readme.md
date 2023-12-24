@@ -3,9 +3,11 @@
 Flexible JSON formatter. Features:
 
 * Preserves order.
-* Fits dicts and lists on a single line until a certain width (configurable).
 * Supports comments (configurable).
 * Supports trailing commas (configurable).
+* Supports max width (configurable).
+  * For dicts and lists: single-line until given width, multi-line after
+    exceeding said width.
 * Fixes missing or broken punctuation.
 * Tiny Go library.
 * Optional tiny CLI.
@@ -30,8 +32,9 @@ To use this as a library, simply import it:
 ```go
 import "github.com/mitranim/jsonfmt"
 
-formatted := jsonfmt.FormatString(`{}`, jsonfmt.Default)
-formatted := jsonfmt.FormatBytes([]byte(`{}`), jsonfmt.Default)
+var formatted string = jsonfmt.Format[string](jsonfmt.Default, `{}`)
+var formatted string = jsonfmt.FormatString(jsonfmt.Default, `{}`)
+var formatted []byte = jsonfmt.FormatBytes(jsonfmt.Default, `{}`)
 ```
 
 ### CLI

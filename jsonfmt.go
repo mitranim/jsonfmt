@@ -21,6 +21,7 @@ package jsonfmt
 
 import (
 	"bytes"
+	"encoding/json"
 	"strings"
 	"unicode/utf8"
 	"unsafe"
@@ -50,7 +51,7 @@ Configuration passed to `Format`. See the variable `Default`.
 
 `Indent` controls multi-line output. When empty, jsonfmt will not emit separator
 spaces or newlines, except at the end of single-line comments. To enforce
-single-line output, use `Indent: ``` and `StripComments: true`.
+single-line output, use `Indent: ""` and `StripComments: true`.
 
 `Width` is the width limit for single-line formatting. If 0, jsonfmt will prefer
 multi-line mode. Note that `Indent` must be set for multi-line.
@@ -67,7 +68,7 @@ surrounded by punctuation.
 multi-line mode. In single-line mode, trailing commas are always omitted.
 
 `StripComments` omits all comments from the output. To enforce single-line mode,
-specify this together with `Indent: ```. Otherwise, single-line comments are
+specify this together with `Indent: ""`. Otherwise, single-line comments are
 always followed by a newline.
 */
 type Conf struct {
@@ -103,6 +104,16 @@ func FormatString[Src Text](conf Conf, src Src) string {
 // Formats JSON text according to config, returning bytes.
 func FormatBytes[Src Text](conf Conf, src Src) []byte {
 	return Format[[]byte](conf, src)
+}
+
+/*
+Shortcut that combines formatting with `json.Unmarshal`. Allows to decode JSON
+with comments or invalid punctuation, such as trailing commas. Slower than
+simply using `json.Unmarshal`. Avoid this when your input is guaranteed to be
+valid JSON, or when you should be enforcing valid JSON.
+*/
+func Unmarshal[Src Text](src Src, out any) error {
+	return json.Unmarshal(Format[[]byte](Conf{}, src), out)
 }
 
 type fmter struct {
