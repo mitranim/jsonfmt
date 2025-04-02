@@ -32,13 +32,14 @@ In addition to CLI, it's also available as a Go library:
 
 	https://github.com/mitranim/jsonfmt
 
-Settings:
+Flags:
 
 `
 
 func main() {
 	conf := jsonfmt.Default
 
+	flag.Usage = usage
 	flag.StringVar(&conf.Indent, `i`, conf.Indent, `indentation`)
 	flag.Uint64Var(&conf.Width, `w`, conf.Width, `line width`)
 	flag.StringVar(&conf.CommentLine, `l`, conf.CommentLine, `beginning of line comment`)
@@ -46,41 +47,37 @@ func main() {
 	flag.StringVar(&conf.CommentBlockEnd, `e`, conf.CommentBlockEnd, `end of block comment`)
 	flag.BoolVar(&conf.TrailingComma, `t`, conf.TrailingComma, `trailing commas when multiline`)
 	flag.BoolVar(&conf.StripComments, `s`, conf.StripComments, `strip comments`)
-
-	flag.Usage = func() {
-		fmt.Fprint(flag.CommandLine.Output(), help)
-		flag.PrintDefaults()
-	}
-
 	flag.Parse()
-	args()
 
-	source, err := io.ReadAll(os.Stdin)
-	if err != nil {
-		fail(fmt.Errorf(`[jsonfmt] failed to read: %w`, err))
-	}
-
-	_, err = os.Stdout.Write(jsonfmt.FormatBytes(conf, source))
-	if err != nil {
-		fail(fmt.Errorf(`[jsonfmt] failed to write: %w`, err))
-	}
-}
-
-func fail(err error) {
-	fmt.Fprintf(flag.CommandLine.Output(), `%+v`, err)
-	os.Exit(1)
-}
-
-func args() {
 	args := flag.Args()
-	if len(args) == 0 {
+
+	if len(args) > 0 {
+		if args[0] == `help` {
+			usage()
+			os.Exit(0)
+			return
+		}
+
+		fmt.Fprintf(os.Stderr, `[jsonfmt] unexpected arguments %q`, args)
+		os.Exit(1)
 		return
 	}
 
-	if args[0] == `help` {
-		flag.Usage()
-		os.Exit(0)
+	src, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, `[jsonfmt] failed to read: %v`, err)
+		os.Exit(1)
+		return
 	}
 
-	fail(fmt.Errorf(`[jsonfmt] unexpected arguments %q`, args))
+	_, err = os.Stdout.Write(jsonfmt.FormatBytes(conf, src))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, `[jsonfmt] failed to write: %v`, err)
+		os.Exit(1)
+	}
+}
+
+func usage() {
+	fmt.Fprint(os.Stderr, help)
+	flag.PrintDefaults()
 }

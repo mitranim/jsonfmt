@@ -20,7 +20,7 @@ Current limitations:
 * Always permissive. Unrecognized non-whitespace is treated as arbitrary content on par with strings, numbers, etc.
 * Slower than `json.Indent` from the Go standard library.
 * Input must be UTF-8.
-* Input and output are `[]byte`, without streaming.
+* No streaming support. Input and output are `[]byte` or `string`.
   * Streaming support could be added on demand.
 
 ## Installation
@@ -48,8 +48,8 @@ go install github.com/mitranim/jsonfmt/jsonfmt@latest
 This will compile the executable into `$GOPATH/bin/jsonfmt`. Make sure `$GOPATH/bin` is in your `$PATH` so the shell can discover the `jsonfmt` command. For example, my `~/.profile` contains this:
 
 ```sh
-export GOPATH=~/go
-export PATH=$PATH:$GOPATH/bin
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:$PATH"
 ```
 
 Alternatively, you can run the executable using the full path. At the time of writing, `~/go` is the default `$GOPATH` for Go installations. Some systems may have a different one.

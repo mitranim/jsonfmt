@@ -1,19 +1,19 @@
 /*
 Flexible JSON formatter. Features:
 
-	* Preserves order.
-	* Fits dicts and lists on a single line until a certain width (configurable).
-	* Supports comments (configurable).
-	* Supports trailing commas (configurable).
-	* Fixes missing or broken punctuation.
-	* Tiny Go library + optional tiny CLI.
+  - Preserves order.
+  - Fits dicts and lists on a single line until a certain width (configurable).
+  - Supports comments (configurable).
+  - Supports trailing commas (configurable).
+  - Fixes missing or broken punctuation.
+  - Tiny Go library + optional tiny CLI.
 
 Current limitations:
 
-	* Always permissive. Unrecognized non-whitespace is treated as arbitrary
-	  content on par with strings, numbers, etc.
-	* Slower than `json.Indent` from the Go standard library.
-	* Input must be UTF-8.
+  - Always permissive. Unrecognized non-whitespace is treated as arbitrary
+    content on par with strings, numbers, etc.
+  - Slower than `json.Indent` from the Go standard library.
+  - Input must be UTF-8.
 
 Source and readme: https://github.com/mitranim/jsonfmt.
 */
@@ -49,27 +49,34 @@ var Default = Conf{
 /*
 Configuration passed to `Format`. See the variable `Default`.
 
-`Indent` controls multi-line output. When empty, jsonfmt will not emit separator
-spaces or newlines, except at the end of single-line comments. To enforce
-single-line output, use `Indent: ""` and `StripComments: true`.
+`.Indent` enables multi-line output. When empty, `jsonfmt` will not emit
+separator spaces or newlines, except at the end of single-line comments.
+When non-empty, `jsonfmt` will emit separator spaces, newlines, and indents
+for contents of lists and dicts. To enforce single-line output, use
+`.Indent = ""` and `.StripComments = true`.
 
-`Width` is the width limit for single-line formatting. If 0, jsonfmt will prefer
-multi-line mode. Note that `Indent` must be set for multi-line.
+`.Width` is the width limit for lists and dicts. If 0, then depending on other
+configuration, `jsonfmt` will format lists and dicts either always in
+multi-line mode, or always in single-line mode. If > 0, then `jsonfmt` will
+attempt to format each list or dict entirely on a single line until the width
+limit, falling back on multi-line mode when exceeding the width limit. Note
+that multi-line mode also requires non-empty `.Indent`.
 
-`CommentLine` starts a single-line comment. If empty, single-line comments won't
-be detected, and will be treated as arbitrary content surrounded by punctuation.
+`.CommentLine` starts a single-line comment. If empty, single-line comments
+won't be detected, and will be treated as arbitrary JSON content.
 
-`CommentBlockStart` and `CommentBlockEnd` must both be set to work. If only one
-is set, the other is ignored. Nested block comments are supported. If unset,
-block comments will not be detected, and will be treated as arbitrary content
-surrounded by punctuation.
+`.CommentBlockStart` and `.CommentBlockEnd` enable support for block comments.
+If both are non-empty, block comments are detected. Nested block comments are
+supported. If at least one is empty, then the other will be ignored, block
+comments will not be detected, and will be treated as arbitrary JSON content.
 
-`TrailingComma` controls trailing commas for last elements in dicts and lists in
+`.TrailingComma` enables trailing commas for last elements in dicts and lists in
 multi-line mode. In single-line mode, trailing commas are always omitted.
 
-`StripComments` omits all comments from the output. To enforce single-line mode,
-specify this together with `Indent: ""`. Otherwise, single-line comments are
-always followed by a newline.
+`.StripComments` omits all comments from the output. To enforce single-line
+output, specify this together with `.Indent = ""`. When single-line comments
+are not omitted from the output, they cause the output to contain newlines,
+because each single-line comment must be followed by a newline.
 */
 type Conf struct {
 	Indent            string `json:"indent"`
@@ -136,6 +143,7 @@ func (self *fmter) top() {
 
 		if self.isNextComment() {
 			assert(self.scannedAny())
+			self.writeMaybeCommentNewline()
 			continue
 		}
 
@@ -155,9 +163,9 @@ func (self *fmter) any() {
 		self.list()
 	} else if self.isNextByte('"') {
 		self.string()
-	} else if self.isNextCommentSingle() {
+	} else if self.isNextCommentLine() {
 		self.commentSingle()
-	} else if self.isNextCommentMulti() {
+	} else if self.isNextCommentBlock() {
 		self.commentMulti()
 	} else {
 		self.atom()
@@ -351,7 +359,7 @@ func (self *fmter) string() {
 }
 
 func (self *fmter) commentSingle() {
-	prefix := self.nextCommentSingle()
+	prefix := self.nextCommentLinePrefix()
 	assert(prefix != ``)
 
 	if self.conf.StripComments {
@@ -379,7 +387,7 @@ func (self *fmter) commentSingle() {
 }
 
 func (self *fmter) commentMulti() {
-	prefix, suffix := self.nextCommentMulti()
+	prefix, suffix := self.nextCommentBlockPrefixSuffix()
 	assert(prefix != `` && suffix != ``)
 
 	if self.conf.StripComments {
@@ -484,7 +492,7 @@ func (self *fmter) writeNewline() {
 }
 
 func (self *fmter) writeIndent() {
-	for i := 0; i < self.indent; i++ {
+	for ind := 0; ind < self.indent; ind++ {
 		self.writeString(self.conf.Indent)
 	}
 }
@@ -502,7 +510,13 @@ func (self *fmter) writeMaybeCommentNewlineIndent() {
 	}
 }
 
-func (self *fmter) nextCommentSingle() string {
+func (self *fmter) writeMaybeCommentNewline() {
+	if !self.conf.StripComments {
+		self.writeMaybeNewline()
+	}
+}
+
+func (self *fmter) nextCommentLinePrefix() string {
 	prefix := self.conf.CommentLine
 	if prefix != `` && strings.HasPrefix(self.rest(), prefix) {
 		return prefix
@@ -510,7 +524,7 @@ func (self *fmter) nextCommentSingle() string {
 	return ``
 }
 
-func (self *fmter) nextCommentMulti() (string, string) {
+func (self *fmter) nextCommentBlockPrefixSuffix() (string, string) {
 	prefix := self.conf.CommentBlockStart
 	suffix := self.conf.CommentBlockEnd
 	if prefix != `` && suffix != `` && strings.HasPrefix(self.rest(), prefix) {
@@ -628,12 +642,12 @@ func (self *fmter) isNextPunctuation() bool {
 	return self.isNextByte(',') || self.isNextByte(':')
 }
 
-func (self *fmter) isNextCommentSingle() bool {
-	return self.nextCommentSingle() != ``
+func (self *fmter) isNextCommentLine() bool {
+	return self.nextCommentLinePrefix() != ``
 }
 
-func (self *fmter) isNextCommentMulti() bool {
-	prefix, suffix := self.nextCommentMulti()
+func (self *fmter) isNextCommentBlock() bool {
+	prefix, suffix := self.nextCommentBlockPrefixSuffix()
 	return prefix != `` && suffix != ``
 }
 
@@ -649,7 +663,7 @@ func (self *fmter) isNextTerminal() bool {
 }
 
 func (self *fmter) isNextComment() bool {
-	return self.isNextCommentSingle() || self.isNextCommentMulti()
+	return self.isNextCommentLine() || self.isNextCommentBlock()
 }
 
 var (

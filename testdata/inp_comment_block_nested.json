@@ -1,0 +1,5 @@
+/* block comment one */ [
+  /* block comment two */ {
+    /* block comment three */ "four": "five"
+  }
+]

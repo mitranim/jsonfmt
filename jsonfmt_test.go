@@ -111,6 +111,27 @@ func TestFormat_single_line_strip_comments(t *testing.T) {
 	eqFile(t, src, `out_long_single_stripped.json`, output)
 }
 
+// TODO consider desired single-line behavior.
+func TestFormat_block_comment_multi_line(t *testing.T) {
+	conf := Default
+
+	const src = `inp_comment_block.json`
+	input := readTestFile(t, src)
+	output := FormatBytes(conf, input)
+	eqFile(t, src, `out_comment_block_multi_line.json`, output)
+}
+
+// TODO consider desired single-line behavior.
+func TestFormat_block_comment_multi_line_nested(t *testing.T) {
+	conf := Default
+	conf.Width = 0
+
+	const src = `inp_comment_block_nested.json`
+	input := readTestFile(t, src)
+	output := FormatBytes(conf, input)
+	eqFile(t, src, `out_comment_block_nested_multi_line.json`, output)
+}
+
 func TestFormat_json_lines(t *testing.T) {
 	conf := Default
 	conf.StripComments = true
